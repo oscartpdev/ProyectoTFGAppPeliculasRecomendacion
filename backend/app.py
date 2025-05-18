@@ -10,11 +10,13 @@ from routes.login import login_bp
 from recomendacion.recomendacion import recomendacion_bp
 from routes.usuarios import user_bp
 from routes.pelicula import pelicula_bp
+from routes.interaccion import interaccion_bp
 
 app.register_blueprint(login_bp)
 app.register_blueprint(recomendacion_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(pelicula_bp)
+app.register_blueprint(interaccion_bp)
 
 # Iniciar app
 if __name__ == '__main__':

@@ -10,7 +10,8 @@ function Home() {
     const [searchResults, setSearchResults] = useState([])
     const [popular, setPopular] = useState([])
     const [topRated, setTopRated] = useState([])
-
+    const usuario = JSON.parse(localStorage.getItem('usuario'))
+    
     useEffect(() => {
         async function loadInitialData() {
           const popularMovies = await peliculasPopulares()
@@ -35,6 +36,7 @@ function Home() {
         <Header />
         
         <main className="min-h-screen bg-gradient-to-b from-red-800 via-black to-gray-900 text-white py-10">
+          <h1 className=''>Bienvenido de nuevo {usuario.nombre}</h1>
             <section>
                 <h1 className="text-4xl font-bold text-center my-8">Sistema De Recomendacion de Peliculas</h1>
                 <div className="flex justify-center mb-8">

@@ -6,16 +6,17 @@ from datetime import datetime
 pelicula_bp = Blueprint('pelicula', __name__)
 
 @pelicula_bp.route('/crear_lista', methods=['POST'])
-def crear_lista_favoritos():
+def crear_lista():
     data = request.get_json()
     usuario_id = data.get('usuario_id')
+    nombre = data.get('nombre', 'Mis Favoritas')
 
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO Lista (usuario_id, nombre) 
-        VALUES (%s, 'Mis Favoritas')
-    """, (usuario_id,))
+        VALUES (%s, %s)
+    """, (usuario_id, nombre))
     conn.commit()
     nueva_id = cursor.lastrowid
     cursor.close()
@@ -55,14 +56,14 @@ def agregar_a_favoritos():
 
     return jsonify({'message': 'Agregado a favoritos'}), 201
 
-@pelicula_bp.route('/lista_favoritos/<usuario_id>', methods=['GET'])
-def lista_favoritos(usuario_id):
+@pelicula_bp.route('/lista/<usuario_id>/<nombre_lista>', methods=['GET'])
+def obtener_lista(usuario_id, nombre_lista):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id FROM Lista 
-        WHERE usuario_id = %s AND nombre = 'Mis favoritas'
-    """, (usuario_id,))
+        WHERE usuario_id = %s AND nombre = %s
+    """, (usuario_id, nombre_lista))
     lista = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -71,3 +72,33 @@ def lista_favoritos(usuario_id):
         return jsonify({'lista_id': lista[0]})
     else:
         return jsonify({'lista_id': None})
+    
+@pelicula_bp.route('/peliculas_lista/<int:usuario_id>/<string:nombre_lista>', methods=['GET'])
+def obtener_peliculas_lista(usuario_id, nombre_lista):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT id FROM Lista 
+        WHERE usuario_id = %s AND nombre = %s
+    """, (usuario_id, nombre_lista))
+    lista = cursor.fetchone()
+
+    if not lista:
+        cursor.close()
+        conn.close()
+        return jsonify({'peliculas': []})
+
+    lista_id = lista['id']
+
+    cursor.execute("""
+        SELECT pelicula_id 
+        FROM Lista_Pelicula 
+        WHERE lista_id = %s
+    """, (lista_id,))
+    
+    peliculas = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify({'peliculas': peliculas})

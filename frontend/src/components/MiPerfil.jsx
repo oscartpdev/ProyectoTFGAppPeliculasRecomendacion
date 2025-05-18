@@ -4,6 +4,7 @@ import Header from './Header'
 import Ajustes from './Ajustes'
 import { useState,useEffect } from 'react'
 import ListaPeliculas from './ListaPeliculas'
+import { obtenerPeliculasDeLista } from '../utils/api'
 function MiPerfil() {
   const [vista, setVista] = useState('ajustes')
   const [usuario, setUsuario] = useState()
@@ -17,6 +18,26 @@ function MiPerfil() {
     
   }, [])
   
+
+  const [peliculas, setPeliculas] = useState([])
+
+  useEffect(() => {
+    async function cargarPeliculas() {
+      if (!usuario) return
+
+      let nombreLista = ''
+      if (vista === 'favoritas') nombreLista = 'Mis Favoritas'
+      if (vista === 'verDespues') nombreLista = 'Vermastarde'
+      if (vista === 'valoradas') nombreLista = 'Valoradas'
+      if (nombreLista) {
+        const resultado = await obtenerPeliculasDeLista(usuario.id, nombreLista)
+        setPeliculas(resultado)
+      }
+    }
+
+    cargarPeliculas()
+  }, [vista, usuario])
+
   return (
     <>
       <Header/>
@@ -42,11 +63,13 @@ function MiPerfil() {
 
       {/* Contenido principal dinámico */}
       <section className="flex-1 p-6">
-      {vista === 'ajustes' && usuario && <Ajustes usuario={usuario} />}
-        {/* {vista === 'favoritas' && <ListaPeliculas peliculas={usuario.favoritas} />} */}
-        {/* {vista === 'valoradas' && <ListaPeliculas peliculas={usuario.valoradas} mostrarRating />} */}
-        {/* {vista === 'verDespues' && <ListaPeliculas peliculas={usuario.verMasTarde} />} */}
+        {vista === 'ajustes' && usuario && <Ajustes usuario={usuario} />}
+        {vista === 'favoritas' && <ListaPeliculas peliculas={peliculas} />}
+        {vista === 'valoradas' && <ListaPeliculas peliculas={peliculas} />}
+        {vista === 'verDespues' && <ListaPeliculas peliculas={peliculas} />}
+
       </section>
+
       </main>
 
       <Footer />

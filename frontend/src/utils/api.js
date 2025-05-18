@@ -75,22 +75,21 @@ export async function getAllAmigos(usuario_id) {
     return [];
   }
 }
-export async function obtenerListaFavoritos(usuario_id) {
-  const response = await fetch(`${BASE_BACKEND_URL}/lista_favoritos/${usuario_id}`);
+export async function obtenerListaPorNombre(usuario_id, nombre) {
+  const response = await fetch(`${BASE_BACKEND_URL}/lista/${usuario_id}/${nombre}`);
   const data = await response.json();
   return data.lista_id;
 }
 
-export async function crearListaFavoritos(usuario_id) {
-  const response = await fetch(`${BASE_BACKEND_URL}/crear_lista_favoritos`, {
+export async function crearLista(usuario_id, nombre) {
+  const response = await fetch(`${BASE_BACKEND_URL}/crear_lista`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario_id })
+    body: JSON.stringify({ usuario_id, nombre })
   });
   const data = await response.json();
   return data.lista_id;
 }
-
 export async function agregarAFavoritos(lista_id, pelicula_id) {
   const response = await fetch(`${BASE_BACKEND_URL}/agregar_a_lista`, {
     method: 'POST',
@@ -98,4 +97,30 @@ export async function agregarAFavoritos(lista_id, pelicula_id) {
     body: JSON.stringify({ lista_id, pelicula_id })
   });
   return response.json(); // contiene { message: ... }
+}
+export async function obtenerPeliculasDeLista(usuario_id, nombre_lista) {
+  const response = await fetch(`http://localhost:5000/peliculas_lista/${usuario_id}/${nombre_lista}`);
+  const data = await response.json();
+  console.log(data)
+  const ids = data.peliculas.map(p => p.pelicula_id);
+  console.log(ids)
+  // Obtener los detalles desde TheMovieDB
+  const detalles = await Promise.all(
+    ids.map(id => sacarDetalles(id))
+  );
+
+  return detalles;
+}
+export async function valorarPelicula(usuario_id, pelicula_id, valor) {
+  const response = await fetch('http://localhost:5000/valorar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usuario_id, pelicula_id, valor }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) throw new Error(data.error || 'Error al valorar')
+
+  return data
 }

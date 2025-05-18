@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { sacarDetalles,obtenerListaFavoritos, crearListaFavoritos, agregarAFavoritos  } from '../utils/api'
+import { sacarDetalles,obtenerListaPorNombre, crearLista, agregarAFavoritos,valorarPelicula   } from '../utils/api'
 import Header from './Header'
 import Footer from './Footer'
-
+import EstrellasRating from './EstrellasRating'
 function DetallePelicula() {
   const { id } = useParams()
   const [detalles, setDetalles] = useState({})
@@ -18,30 +18,51 @@ function DetallePelicula() {
     fetchData()
   }, [id])
 
-  const manejarAgregarFavoritos = async () => {
-  if (!usuario) {
-    alert('Debes estar logueado para agregar favoritos.')
-    return
-  }
-
-  try {
-    // 1. Obtener la lista del usuario
-    let lista_id = await obtenerListaFavoritos(usuario.id)
-    console.log('Lista de favoritos:',lista_id)
-    if (!lista_id) {
-      lista_id = await crearListaFavoritos(usuario.id)
+  const manejarAgregarALista = async (nombreLista) => {
+    if (!usuario) {
+      alert('Debes estar logueado para agregar películas.');
+      return;
     }
 
-    // 2. Agregar la película
-    console.log(detalles.id)
-    const resultado = await agregarAFavoritos(lista_id, detalles.id)
-    console.log(resultado)
-    alert(resultado.message)
-  } catch (error) {
-    console.error('Error al agregar a favoritos:', error)
-    alert('Ocurrió un error al agregar la película.')
-  }
-  }
+    try {
+      let lista_id = await obtenerListaPorNombre(usuario.id, nombreLista);
+
+      if (!lista_id) {
+        lista_id = await crearLista(usuario.id, nombreLista);
+      }
+
+      const resultado = await agregarAFavoritos(lista_id, detalles.id);
+      alert(resultado.message);
+    } catch (error) {
+      console.error(`Error al agregar a la lista "${nombreLista}"`, error);
+      alert('Ocurrió un error al agregar la película.');
+    }
+  };
+  const manejarValoracion = async (valor) => {
+    if (!usuario) {
+      alert('Debes estar logueado para valorar películas.');
+      return;
+    }
+
+    try {
+      // 1. Guardar la valoración
+      await valorarPelicula(usuario.id, detalles.id, valor);
+
+      // 2. Obtener o crear la lista "Valoradas"
+      let lista_id = await obtenerListaPorNombre(usuario.id, 'Valoradas');
+      if (!lista_id) {
+        lista_id = await crearLista(usuario.id, 'Valoradas');
+      }
+
+      // 3. Agregar la película a la lista si no está ya
+      await agregarAFavoritos(lista_id, detalles.id);
+
+      alert('¡Valoración guardada y agregada a tu lista "Valoradas"!');
+    } catch (error) {
+      console.error('Error al valorar la película:', error);
+      alert('Error al guardar la valoración.');
+    }
+  };
 
   return (
     <>
@@ -97,18 +118,30 @@ function DetallePelicula() {
               <strong className="block mb-1">Sinopsis:</strong>
               <p className="text-sm text-gray-700">{detalles.overview}</p>
             </div>
+            <EstrellasRating pelicula_id={detalles.id} usuario_id={usuario.id} onValorar={manejarValoracion} />
+
+
             <div className="mb-6">
             <strong className="block mb-1">Página Web:</strong>
             {detalles.homepage ? (
                 <a href={detalles.homepage} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline hover:text-blue-800">{detalles.homepage}</a>):(<p className="text-sm text-gray-500">No hay enlace disponible</p>)}
             </div>
 
-           <button
-            onClick={manejarAgregarFavoritos}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition"
-          >
-            Agregar a Favoritos
-          </button>
+           <div className="flex gap-4">
+              <button
+                onClick={() => manejarAgregarALista('Mis Favoritas')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition"
+              >
+                Agregar a Favoritos
+              </button>
+
+              <button
+                onClick={() => manejarAgregarALista('Vermastarde')}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2 rounded-lg transition"
+              >
+                Ver mas tarde
+              </button>
+            </div>
           </div>
         </div>
       </main>

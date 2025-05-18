@@ -5,6 +5,7 @@ function CarruselPeliculas({titulo,movies}) {
     <>
       <div className="mb-8 px-4">
       <h2 className="text-2xl font-bold mb-4">{titulo}</h2>
+      <Link to={"/"}>Ver Mas</Link>
       <div className="flex overflow-x-auto space-x-4 scrollbar-hide">
         {movies.map((movie) => (
           <div key={movie.id} className="min-w-[200px] bg-gray-700 shadow rounded-lg p-2">
